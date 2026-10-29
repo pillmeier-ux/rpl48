@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>RPL·48</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RPL·48">
+<meta name="theme-color" content="#272a2a">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --body1:#3b3f3e; --body2:#272a2a; --bezel:#191c1c;
+  --lcd1:#bfcaa9; --lcd2:#aab695; --ink:#1b2316;
+  --key1:#4b4f51; --key2:#2f3234; --keyTxt:#f3f3ef;
+  --ls:#b993e8; --lsKey:#7b52b3; --rs:#5cc9a6; --rsKey:#2c937a;
+  --al:#e9e6d8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#121414;overflow:hidden}
+body{display:flex;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.calc{width:min(100vw,440px);height:100%;max-height:960px;display:flex;flex-direction:column;
+  background:linear-gradient(170deg,var(--body1),var(--body2));
+  padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 10px);gap:8px}
+@media (min-width:460px) and (min-height:700px){ .calc{border-radius:28px;margin:12px 0;height:calc(100% - 24px);box-shadow:0 20px 60px #000a} }
+.top{display:flex;align-items:center;justify-content:space-between;color:#cfd3cf;padding:0 4px}
+.brand{font-weight:700;letter-spacing:.18em;font-size:13px}
+.brand b{color:var(--ls)} .brand i{font-style:normal;color:var(--rs)}
+.hbtn{background:none;border:1px solid #5b605e;color:#cfd3cf;border-radius:12px;font-size:12px;padding:3px 10px;cursor:pointer}
+.bezel{background:var(--bezel);border-radius:10px;padding:8px;box-shadow:inset 0 2px 6px #000}
+.lcd{position:relative;background:linear-gradient(180deg,var(--lcd1),var(--lcd2));border-radius:4px;padding:4px 6px 3px;
+  color:var(--ink);font-family:"SF Mono",ui-monospace,Menlo,Consolas,"Courier New",monospace;box-shadow:inset 0 1px 4px #0005;cursor:text}
+.ann{display:flex;gap:10px;height:1.05em;font-size:.72em;font-weight:700;opacity:.9;font-family:-apple-system,sans-serif}
+.ann span{opacity:0} .ann span.on{opacity:1}
+.ln{white-space:pre;height:1.16em;line-height:1.16em;overflow:hidden}
+.hdr{opacity:.85}
+.err{font-weight:700}
+.cur{background:var(--ink);color:var(--lcd1);animation:bl 1s steps(1) infinite}
+@keyframes bl{50%{background:transparent;color:var(--ink)}}
+.ptr{font-weight:700}
+.menu{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin-top:2px}
+.mk{position:relative;background:var(--ink);color:var(--lcd1);text-align:center;font-size:.7em;line-height:1.35em;height:1.35em;border-radius:0 0 3px 3px;overflow:hidden;white-space:nowrap}
+.mk.dir::before{content:"";position:absolute;left:0;top:0;width:45%;height:2px;background:var(--lcd1)}
+.mk.empty{background:transparent}
+#kbd{position:absolute;opacity:0;left:0;top:0;width:1px;height:1px;border:0;padding:0;font-size:16px}
+.pad{flex:1;display:flex;flex-direction:column;gap:2px;min-height:0}
+.grid{display:grid;gap:0 7px}
+.g6{grid-template-columns:repeat(6,1fr);grid-template-rows:.8fr 1fr 1fr 1fr 1fr;flex:5}
+.g5{grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(4,1fr);flex:4.6}
+.cell{display:flex;flex-direction:column;min-height:0}
+.sh{display:flex;justify-content:space-between;gap:3px;letter-spacing:-.2px;font-size:8.6px;font-weight:700;height:13px;line-height:13px;white-space:nowrap;overflow:visible;padding:0 1px}
+.sh .l{color:var(--ls)} .sh .r{color:var(--rs)}
+.g5 .sh{font-size:10.5px}
+.key{position:relative;flex:1;min-height:0;margin-bottom:5px;border:0;border-radius:7px;cursor:pointer;
+  background:linear-gradient(180deg,var(--key1),var(--key2));color:var(--keyTxt);font-weight:600;font-size:13px;
+  box-shadow:0 2px 0 #0f1111,inset 0 1px 0 #ffffff1c;font-family:inherit;padding:0}
+.key:active,.key.down{transform:translateY(1px);box-shadow:0 1px 0 #0f1111;filter:brightness(1.15)}
+.g5 .key{font-size:19px;border-radius:8px}
+.g5 .key.op{font-size:22px}
+.key.soft{background:linear-gradient(180deg,#e9e8e0,#bdbcb4);color:#222;height:auto}
+.key.ls{background:linear-gradient(180deg,#8f65c9,var(--lsKey))}
+.key.rs{background:linear-gradient(180deg,#3aa78b,var(--rsKey))}
+.key.alpha{background:linear-gradient(180deg,#d8d6cb,#aeada4);color:#222}
+.key.on1{outline:2px solid #fff;outline-offset:1px}
+.key.enter{font-size:13px;letter-spacing:.05em}
+.key .al{position:absolute;right:3px;bottom:1px;font-size:9px;color:var(--al);opacity:.75;font-weight:700}
+.key.soft .al,.key.alpha .al{color:#444}
+.span2{grid-column:span 2}
+.help{position:fixed;inset:0;background:#000b;display:none;align-items:flex-end;justify-content:center;z-index:9}
+.help.show{display:flex}
+.hcard{background:#f4f3ee;color:#1d1f1f;width:min(100vw,440px);max-height:88%;overflow:auto;border-radius:18px 18px 0 0;
+  padding:18px 20px calc(env(safe-area-inset-bottom) + 20px);font-size:14.5px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.hcard h2{margin:0 0 6px;font-size:18px} .hcard h3{margin:14px 0 4px;font-size:14.5px}
+.hcard code{background:#e3e1d8;padding:1px 4px;border-radius:4px;font-size:13px}
+.hcard ul{margin:4px 0;padding-left:18px}
+.hcard .x{float:right;border:0;background:#ddd;border-radius:14px;width:28px;height:28px;font-size:16px;cursor:pointer}
+.lsT{color:#7b52b3;font-weight:700}.rsT{color:#24826b;font-weight:700}
+</style>
+</head>
+<body>
+<div class="calc">
+  <div class="top"><div class="brand">RPL<b>·</b>4<i>8</i></div><button class="hbtn" id="hbtn">Hilfe</button></div>
+  <div class="bezel">
+    <div class="lcd" id="lcd">
+      <div class="ann"><span id="aL">◄</span><span id="aR">►</span><span id="aA">α</span><span id="aP">PRG</span><span id="aG">ALG</span></div>
+      <div id="screen"></div>
+      <div class="menu" id="menu"></div>
+      <input id="kbd" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+    </div>
+  </div>
+  <div class="pad">
+    <div class="grid g6" id="g6"></div>
+    <div class="grid g5" id="g5"></div>
+  </div>
+</div>
+<div class="help" id="help"><div class="hcard">
+  <button class="x" id="hx">×</button>
+  <h2>RPL·48 – Kurzanleitung</h2>
+  Ein RPN/RPL-Rechner nach dem Vorbild des HP 48GX. Zahlen kommen auf den Stack, Befehle arbeiten mit den Ebenen <code>1:</code>, <code>2:</code> …
+  <h3>Grundlagen</h3>
+  <ul>
+    <li><code>3 ENTER 4 +</code> → 7. Ein Operator schließt die Eingabe automatisch ab.</li>
+    <li><b>ENTER</b> ohne Eingabe = DUP, <b>⌫</b> ohne Eingabe = DROP, <b>►</b> ohne Eingabe = SWAP.</li>
+    <li><b>▼</b> bearbeitet Ebene 1, <b>▲</b> öffnet den interaktiven Stack (ECHO, PICK, ROLL …).</li>
+    <li><span class="lsT">◄</span> (lila) und <span class="rsT">►</span> (grün) wählen die Zweitfunktionen über den Tasten.</li>
+    <li><b>ON</b> = ATTN: bricht Eingabe/Fehler ab. <span class="rsT">► EVAL</span> = UNDO.</li>
+    <li>Tippe auf das Display, um die Handy-Tastatur zu öffnen (Namen, Programme schneller eintippen). Am Computer funktioniert die normale Tastatur.</li>
+  </ul>
+  <h3>Variablen</h3>
+  <ul>
+    <li><code>5 'A' STO</code> speichert. Der Name erscheint im <b>VAR</b>-Menü.</li>
+    <li>VAR-Softkey: drücken = ausführen/abrufen, <span class="lsT">◄</span>+Softkey = speichern, <span class="rsT">►</span>+Softkey = RCL.</li>
+    <li><b>'</b> öffnet Anführungszeichen und schaltet α ein. <b>α</b> schaltet Buchstaben ein/aus, <span class="lsT">◄</span> im α-Modus = Kleinbuchstaben.</li>
+  </ul>
+  <h3>Programme (RPL)</h3>
+  <ul>
+    <li><span class="lsT">◄ ÷</span> setzt <code>« »</code>. In einem Programm werden Befehlstasten als Text eingefügt (Anzeige PRG).</li>
+    <li>Strukturen: <code>IF … THEN … ELSE … END</code>, <code>CASE</code>, <code>IFERR</code>, <code>start end FOR i … NEXT/STEP</code>, <code>START … NEXT</code>, <code>WHILE … REPEAT … END</code>, <code>DO … UNTIL … END</code></li>
+    <li>Lokale Variablen: <code>« → a b « a b * » »</code> oder <code>« → r 'π*r^2' »</code></li>
+    <li>Beispiele im VAR-Menü: HYP, FAKT, FIB, KREIS.</li>
+  </ul>
+  <h3>Objekte</h3>
+  Zahlen, komplexe Zahlen <code>(1,2)</code>, Strings <code>"abc"</code>, Namen <code>'X'</code>, Algebraische <code>'X^2+1'</code> (symbolisch rechnen, EVAL, →NUM), Listen <code>{ }</code>, Vektoren <code>[ ]</code>, Programme <code>« »</code>.
+  <h3>Menüs</h3>
+  MTH (Mathe), PRG (Stack, Objekte, Verzweigungen, Tests, Listen, Strings, Speicher), CST (eigenes Menü aus der Liste in Variable <code>CST</code>), VAR. <b>NXT</b> blättert, <span class="lsT">◄ NXT</span> zurück. <span class="lsT">◄ MTH</span> = Modi (STD/FIX/SCI/ENG, DEG/RAD/GRAD).
+  <p style="opacity:.6;font-size:12.5px">Stack und Variablen bleiben in diesem Browser gespeichert. Ein unabhängiges Fan-Projekt, inspiriert vom HP 48GX.</p>
+</div></div>
+<script>
+"use strict";
+// ======================= Core objects =======================
+class E extends Error{constructor(m,cmd){super(m);this.cmd=cmd||null;}}
+const ERR={few:'Too Few Arguments',type:'Bad Argument Type',val:'Bad Argument Value',undef:'Undefined Name',
+  syn:'Invalid Syntax',inf:'Infinite Result',dim:'Invalid Dimension',intr:'Interrupted',ures:'Undefined Result',mem:'Out of Memory'};
+const isR=x=>typeof x==='number';
+const T=x=>isR(x)?'r':x.t;
+const cx=(re,im)=>({t:'c',re,im});
+const str=v=>({t:'s',v}), nm=v=>({t:'n',v}), lst=v=>({t:'l',v}), alg=e=>({t:'a',e}), vec=v=>({t:'v',v});
+const sym=x=>!isR(x)&&(x.t==='n'||x.t==='a');
+function R(x){ if(Number.isNaN(x)) throw new E(ERR.ures); if(!isFinite(x)) throw new E(ERR.inf); return Number(x.toPrecision(12))||0; }
+function real(x){ if(!isR(x)) throw new E(ERR.type); return x; }
+function int(x){ real(x); return Math.round(x); }
+
+let S=[], V={}, L=[], steps=0, lastErr='';
+let mode={ang:'DEG',fmt:'STD',dig:4};
+const LIMIT=4e6;
+function tick(){ if(++steps>LIMIT) throw new E(ERR.intr); }
+
+// ======================= Formatting =======================
+let DCTX='disp';
+function digExp(x,p){ const s=Math.abs(x).toExponential(p); const [m,e]=s.split('e'); return {d:m.replace('.',''),e:parseInt(e)}; }
+function sci(x,n){ const {d,e}=digExp(x,n); const sgn=x<0?'-':''; return sgn+d[0]+'.'+d.slice(1)+'E'+e; }
+function std(x){
+  if(x===0) return '0';
+  let {d,e}=digExp(x,11); d=d.replace(/0+$/,''); const sgn=x<0?'-':'';
+  if(e>=0&&e<12){ const ip=d.slice(0,e+1).padEnd(e+1,'0'); const fp=d.slice(e+1); return sgn+ip+(fp?'.'+fp:''); }
+  if(e<0 && (-e-1)+d.length<=12) return sgn+'.'+'0'.repeat(-e-1)+d;
+  return sgn+d[0]+'.'+d.slice(1)+'E'+e;
+}
+function fmtR(x){
+  if(DCTX==='exact') return String(x).toUpperCase().replace('E+','E');
+  if(DCTX==='edit'||mode.fmt==='STD') return std(x);
+  const n=mode.dig, a=Math.abs(x);
+  if(mode.fmt==='FIX'){
+    if(x!==0&&(a>=1e12||a<0.5*Math.pow(10,-n))) return sci(x,n);
+    return x.toFixed(n).replace(/^(-?)0\./,'$1.');
+  }
+  if(mode.fmt==='SCI') return sci(x,n);
+  if(x===0) return (0).toFixed(n).replace(/^0\./,'.')+'E0';
+  let e=Math.floor(Math.log10(a)/3)*3; let m=x/Math.pow(10,e);
+  let ms=m.toFixed(Math.max(0,n-(Math.floor(Math.log10(Math.abs(m)))))) ;
+  if(Math.abs(parseFloat(ms))>=1000){e+=3;m=x/Math.pow(10,e);ms=m.toFixed(n);}
+  return ms+'E'+e;
+}
+const PREC={'+':1,'-':1,'*':2,'/':2,'^':4};
+function prec(n){ if(n.k==='op') return PREC[n.o]; if(n.k==='neg') return 3; if(n.k==='num'&&n.v<0) return 3; return 9; }
+function a2s(n){
+  switch(n.k){
+    case 'num': return fmtR(n.v);
+    case 'var': return n.n;
+    case 'neg': { const s=a2s(n.a); return '-'+(prec(n.a)<=3?'('+s+')':s); }
+    case 'fn': if(n.f==='√'){ const s=a2s(n.args[0]); return '√'+(prec(n.args[0])<9?'('+s+')':s); }
+      return n.f+'('+n.args.map(a2s).join(',')+')';
+    case 'op': { const P=prec(n), pl=prec(n.a), pr=prec(n.b); let l=a2s(n.a), r=a2s(n.b);
+      if(pl<P||(n.o==='^'&&pl<=P)) l='('+l+')';
+      if(pr<P||(pr===P&&(n.o==='-'||n.o==='/'))||(pr===3&&P<3)) r='('+r+')';
+      return l+n.o+r; }
+  }
+  return '?';
+}
+function seqS(a){ return a.map(dec1).filter(s=>s!=='').join(' '); }
+function dec1(x){
+  if(isR(x)) return fmtR(x);
+  switch(x.t){
+    case 'c': return '('+fmtR(x.re)+','+fmtR(x.im)+')';
+    case 's': return '"'+x.v+'"';
+    case 'n': return "'"+x.v+"'";
+    case 'a': return "'"+a2s(x.e)+"'";
+    case 'l': return x.v.length?'{ '+seqS(x.v)+' }':'{ }';
+    case 'v': return '[ '+seqS(x.v)+' ]';
+    case 'p': return x.v.length?'« '+seqS(x.v)+' »':'« »';
+    case 'id': return x.v;
+    case 'IF': case 'IFERR': return x.t+' '+seqS(x.c)+' THEN '+seqS(x.th)+(x.el?' ELSE '+seqS(x.el):'')+' END';
+    case 'CASE': return 'CASE '+x.cl.map(c=>seqS(c[0])+' THEN '+seqS(c[1])+' END').join(' ')+(x.def.length?' '+seqS(x.def):'')+' END';
+    case 'FOR': return 'FOR '+x.n+' '+seqS(x.b)+(x.st?' STEP':' NEXT');
+    case 'START': return 'START '+seqS(x.b)+(x.st?' STEP':' NEXT');
+    case 'WHILE': return 'WHILE '+seqS(x.c)+' REPEAT '+seqS(x.b)+' END';
+    case 'DO': return 'DO '+seqS(x.b)+' UNTIL '+seqS(x.c)+' END';
+    case 'LOC': return '→ '+x.names.join(' ')+' '+dec1(x.b);
+  }
+  return '?';
+}
+function dec(x,ctx){ const o=DCTX; DCTX=ctx||'disp'; try{ return dec1(x); } finally{ DCTX=o; } }
+
+// ======================= Parser =======================
+const NUMRE=/^[+-]?(\d+\.?\d*|\.\d+)(E[+-]?\d+)?$/i;
+const NAMERE=/^[A-Za-zα-ωΑ-Ωπ_][A-Za-z0-9α-ωΑ-Ωπ_]*$/;
+const DELIM='{}[]«»"\'(';
+function tokenize(s){
+  const t=[]; let i=0; const n=s.length;
+  while(i<n){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    if(c==='"'){ const j=s.indexOf('"',i+1); if(j<0) throw new E(ERR.syn); t.push({k:'str',v:s.slice(i+1,j)}); i=j+1; continue; }
+    if(c==="'"){ const j=s.indexOf("'",i+1); if(j<0) throw new E(ERR.syn); t.push({k:'q',v:s.slice(i+1,j).trim()}); i=j+1; continue; }
+    if(c==='('){ const j=s.indexOf(')',i+1); if(j<0) throw new E(ERR.syn); t.push({k:'cx',v:s.slice(i+1,j)}); i=j+1; continue; }
+    if(c==='«'||s.startsWith('<<',i)){ t.push({k:'«'}); i+=c==='«'?1:2; continue; }
+    if(c==='»'||s.startsWith('>>',i)){ t.push({k:'»'}); i+=c==='»'?1:2; continue; }
+    if('{}[]'.includes(c)){ t.push({k:c}); i++; continue; }
+    let j=i; while(j<n&&!/\s/.test(s[j])&&!DELIM.includes(s[j])&&s[j]!=='»'&&!(s.startsWith('>>',j)&&j>i)) j++;
+    if(j===i) j=i+1;
+    t.push({k:'w',v:s.slice(i,j)}); i=j;
+  }
+  return t;
+}
+function quoteObj(v){ if(NAMERE.test(v)) return nm(v); return alg(parseAlg(v)); }
+function parse(src){
+  const tk=tokenize(src); let p=0;
+  const syn=()=>new E(ERR.syn);
+  function seq(stops){
+    const items=[];
+    for(;;){
+      if(p>=tk.length){ if(stops) throw syn(); return {items,stop:null}; }
+      const t=tk[p];
+      if(stops&&((t.k==='w'&&stops.includes(t.v))||stops.includes(t.k))){ p++; return {items,stop:t.k==='w'?t.v:t.k}; }
+      items.push(item());
+    }
+  }
+  function item(){
+    const t=tk[p++];
+    switch(t.k){
+      case 'str': return str(t.v);
+      case 'q': return quoteObj(t.v);
+      case 'cx': { const m=t.v.split(/[,\s]+/).filter(Boolean); if(m.length!==2||!NUMRE.test(m[0])||!NUMRE.test(m[1])) throw syn(); return cx(+m[0],+m[1]); }
+      case '{': return lst(seq(['}']).items);
+      case '[': { const it=seq([']']).items; if(!it.every(isR)) throw syn(); return vec(it); }
+      case '«': return {t:'p',v:seq(['»']).items};
+      case 'w': return word(t.v);
+    }
+    throw syn();
+  }
+  function word(w){
+    if(NUMRE.test(w)) return parseFloat(w);
+    switch(w){
+      case 'IF': case 'IFERR': { const c=seq(['THEN']).items; const r=seq(['ELSE','END']); let el=null; if(r.stop==='ELSE') el=seq(['END']).items; return {t:w,c,th:r.items,el}; }
+      case 'CASE': { const cl=[]; let def=[]; for(;;){ const r=seq(['THEN','END']); if(r.stop==='END'){def=r.items;break;} cl.push([r.items,seq(['END']).items]); } return {t:'CASE',cl,def}; }
+      case 'FOR': { const v=tk[p++]; if(!v||v.k!=='w'||!NAMERE.test(v.v)) throw syn(); const r=seq(['NEXT','STEP']); return {t:'FOR',n:v.v,b:r.items,st:r.stop==='STEP'}; }
+      case 'START': { const r=seq(['NEXT','STEP']); return {t:'START',b:r.items,st:r.stop==='STEP'}; }
+      case 'WHILE': { const c=seq(['REPEAT']).items; return {t:'WHILE',c,b:seq(['END']).items}; }
+      case 'DO': { const b=seq(['UNTIL']).items; return {t:'DO',b,c:seq(['END']).items}; }
+      case '→': case '->': {
+        const names=[]; while(p<tk.length&&tk[p].k==='w'&&NAMERE.test(tk[p].v)) names.push(tk[p++].v);
+        if(!names.length||p>=tk.length) throw syn();
+        const b=item(); if(b.t==='n') return {t:'LOC',names,b:alg({k:'var',n:b.v})};
+        if(isR(b)||(b.t!=='p'&&b.t!=='a')) throw syn(); return {t:'LOC',names,b};
+      }
+      case 'THEN': case 'ELSE': case 'END': case 'NEXT': case 'STEP': case 'REPEAT': case 'UNTIL': throw syn();
+    }
+    return {t:'id',v:w};
+  }
+  return seq(null).items;
+}
+function parseAlg(s){
+  const t=[]; let i=0; const syn=()=>new E(ERR.syn);
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue;}
+    let m=s.slice(i).match(/^(\d+\.?\d*|\.\d+)(E[+-]?\d+)?/i);
+    if(m){ t.push({k:'n',v:parseFloat(m[0])}); i+=m[0].length; continue; }
+    m=s.slice(i).match(/^[A-Za-zα-ωΑ-Ωπ_][A-Za-z0-9α-ωΑ-Ωπ_]*/);
+    if(m){ t.push({k:'id',v:m[0]}); i+=m[0].length; continue; }
+    if('+-*/^(),√×÷'.includes(c)){ t.push({k:c==='×'?'*':c==='÷'?'/':c}); i++; continue; }
+    throw syn();
+  }
+  let p=0; const pk=()=>t[p]?t[p].k:null;
+  function expr(){ let a=term(); while(pk()==='+'||pk()==='-'){ const o=t[p++].k; a={k:'op',o,a,b:term()}; } return a; }
+  function term(){ let a=unary(); while(pk()==='*'||pk()==='/'){ const o=t[p++].k; a={k:'op',o,a,b:unary()}; } return a; }
+  function unary(){ if(pk()==='-'){ p++; const a=unary(); return a.k==='num'?{k:'num',v:-a.v}:{k:'neg',a}; } if(pk()==='+'){p++;return unary();} return power(); }
+  function power(){ const a=prim(); if(pk()==='^'){ p++; return {k:'op',o:'^',a,b:unary()}; } return a; }
+  function prim(){
+    const x=t[p++]; if(!x) throw syn();
+    if(x.k==='n') return {k:'num',v:x.v};
+    if(x.k==='√') return {k:'fn',f:'√',args:[prim()]};
+    if(x.k==='('){ const e=expr(); if(!t[p]||t[p++].k!==')') throw syn(); return e; }
+    if(x.k==='id'){
+      if(pk()==='('){ p++; const args=[]; if(pk()!==')'){ args.push(expr()); while(pk()===','){p++;args.push(expr());} }
+        if(!t[p]||t[p++].k!==')') throw syn(); const c=lookupCmd(x.v); return {k:'fn',f:c?c.name:x.v,args}; }
+      return {k:'var',n:x.v};
+    }
+    throw syn();
+  }
+  const e=expr(); if(p<t.length) throw syn(); return e;
+}
+
+// ======================= Evaluator =======================
+const CMD={}; const ALGOK=new Set();
+function C(names,n,f){ const list=names.split(' '); for(const k of list) CMD[k]={n,f,name:list[0]}; }
+function lookupCmd(w){ return CMD[w]||(w.length>1&&CMD[w.toUpperCase()])||null; }
+function push(x){ S.push(x); }
+function need(n){ if(S.length<n) throw new E(ERR.few); }
+function execCmd(c){
+  try{
+    if(c.n<0){ c.f(); return; }
+    need(c.n);
+    const a=S.slice(S.length-c.n);
+    const r=c.f(...a);
+    S.length-=c.n;
+    if(r===undefined) return;
+    if(Array.isArray(r)) for(const x of r) S.push(x); else S.push(r);
+  }catch(e){ if(e instanceof E&&!e.cmd) e.cmd=c.name; throw e; }
+}
+function findLocal(n){ for(let i=L.length-1;i>=0;i--) if(Object.prototype.hasOwnProperty.call(L[i],n)) return L[i]; return null; }
+const CONST={'π':()=>R(Math.PI),'e':()=>R(Math.E),'i':()=>cx(0,1)};
+function runGlobal(items){ const saved=L; L=[]; try{ run(items); } finally{ L=saved; } }
+function evalName(n){
+  const f=findLocal(n); if(f){ push(f[n]); return; }
+  const c=lookupCmd(n); if(c){ execCmd(c); return; }
+  if(Object.prototype.hasOwnProperty.call(V,n)){
+    const v=V[n];
+    if(!isR(v)&&v.t==='p'){ runGlobal(v.v); return; }
+    if(!isR(v)&&v.t==='a'){ push(evalAst(v.e,false)); return; }
+    if(!isR(v)&&v.t==='n'){ evalName(v.v); return; }
+    push(v); return;
+  }
+  push(nm(n));
+}
+function popTruth(){ need(1); const x=S[S.length-1]; if(!isR(x)) throw new E(ERR.type); S.pop(); return x!==0; }
+function popReal(){ need(1); const x=S[S.length-1]; if(!isR(x)) throw new E(ERR.type); S.pop(); return x; }
+function run(items){ for(const it of items) exec(it); }
+function exec(it){
+  tick();
+  if(isR(it)){ S.push(it); return; }
+  switch(it.t){
+    case 'id': evalName(it.v); return;
+    case 'IF': run(it.c); if(popTruth()) run(it.th); else if(it.el) run(it.el); return;
+    case 'IFERR': { const depth=S.length; let failed=false;
+      try{ run(it.c); }catch(e){ if(!(e instanceof E)||e.message===ERR.intr) throw e; failed=true; lastErr=e.message; }
+      if(failed) run(it.th); else if(it.el) run(it.el); return; }
+    case 'CASE': for(const [c,b] of it.cl){ run(c); if(popTruth()){ run(b); return; } } run(it.def); return;
+    case 'FOR': case 'START': {
+      need(2); const a=S[S.length-2], b=S[S.length-1]; if(!isR(a)||!isR(b)) throw new E(ERR.type); S.length-=2;
+      const fr={}; const key=it.t==='FOR'?it.n:'\u0000ctr'; fr[key]=a; if(it.t==='FOR') L.push(fr);
+      try{
+        for(;;){ tick(); run(it.b); let inc=1; if(it.st) inc=popReal(); const nv=R(fr[key]+inc); fr[key]=nv;
+          if(inc>=0?nv>b:nv<b) break; }
+      } finally{ if(it.t==='FOR') L.pop(); }
+      return; }
+    case 'WHILE': for(;;){ tick(); run(it.c); if(!popTruth()) break; run(it.b); } return;
+    case 'DO': for(;;){ tick(); run(it.b); run(it.c); if(popTruth()) break; } return;
+    case 'LOC': { const n=it.names.length; need(n); const vals=S.slice(S.length-n); S.length-=n; const fr={};
+      it.names.forEach((k,i)=>fr[k]=vals[i]); L.push(fr);
+      try{ if(it.b.t==='p') run(it.b.v); else push(evalAst(it.b.e,false)); } finally{ L.pop(); }
+      return; }
+    default: S.push(it);
+  }
+}
+function callCmd(name,args){
+  const c=lookupCmd(name); if(!c) throw new E(ERR.undef);
+  const base=S.length; for(const a of args) S.push(a);
+  try{ execCmd(c); }catch(e){ S.length=base; throw e; }
+  if(S.length!==base+1){ S.length=base; throw new E(ERR.val); }
+  return S.pop();
+}
+function resolveVar(n,num){
+  const f=findLocal(n); if(f) return valOf(f[n],num);
+  if(CONST[n]) return CONST[n]();
+  if(Object.prototype.hasOwnProperty.call(V,n)) return valOf(V[n],num);
+  if(num) throw new E(ERR.undef);
+  return nm(n);
+}
+function valOf(v,num){
+  if(isR(v)) return v;
+  if(v.t==='a') return evalAst(v.e,num);
+  if(v.t==='n') return resolveVar(v.v,num);
+  if(v.t==='p'){ const base=S.length; runGlobal(v.v); if(S.length!==base+1) throw new E(ERR.val); return S.pop(); }
+  return v;
+}
+function evalAst(n,num){
+  tick();
+  switch(n.k){
+    case 'num': return n.v;
+    case 'var': return resolveVar(n.n,num);
+    case 'neg': return callCmd('NEG',[evalAst(n.a,num)]);
+    case 'op': return callCmd(n.o,[evalAst(n.a,num),evalAst(n.b,num)]);
+    case 'fn': return callCmd(n.f,n.args.map(a=>evalAst(a,num)));
+  }
+  throw new E(ERR.syn);
+}
+function toAst(x){ if(isR(x)) return {k:'num',v:x}; if(x.t==='n') return {k:'var',n:x.v}; if(x.t==='a') return x.e; throw new E(ERR.type); }
+
+// ======================= Math =======================
+const toRad=x=>mode.ang==='DEG'?x*Math.PI/180:mode.ang==='GRAD'?x*Math.PI/200:x;
+const fromRad=x=>mode.ang==='DEG'?x*180/Math.PI:mode.ang==='GRAD'?x*200/Math.PI:x;
+const toC=x=>isR(x)?[x,0]:[x.re,x.im];
+function cres(z){ if(isR(z)) return R(z); return cx(R(z[0]),R(z[1])); }
+const cm={
+  '+':(a,b)=>[a[0]+b[0],a[1]+b[1]], '-':(a,b)=>[a[0]-b[0],a[1]-b[1]],
+  '*':(a,b)=>[a[0]*b[0]-a[1]*b[1],a[0]*b[1]+a[1]*b[0]],
+  '/':(a,b)=>{ const d=b[0]*b[0]+b[1]*b[1]; if(d===0) throw new E(ERR.inf); return [(a[0]*b[0]+a[1]*b[1])/d,(a[1]*b[0]-a[0]*b[1])/d]; },
+  '^':(a,b)=>{ if(a[0]===0&&a[1]===0) return [0,0]; return cexp(cm['*'](b,cln(a))); }
+};
+function cln(z){ return [Math.log(Math.hypot(z[0],z[1])),Math.atan2(z[1],z[0])]; }
+function cexp(z){ const e=Math.exp(z[0]); return [e*Math.cos(z[1]),e*Math.sin(z[1])]; }
+function csqrt(z){ const r=Math.hypot(z[0],z[1]); const a=Math.sqrt((r+z[0])/2), b=Math.sign(z[1]||1)*Math.sqrt((r-z[0])/2); return [a,b]; }
+const csin=z=>[Math.sin(z[0])*Math.cosh(z[1]),Math.cos(z[0])*Math.sinh(z[1])];
+const ccos=z=>[Math.cos(z[0])*Math.cosh(z[1]),-Math.sin(z[0])*Math.sinh(z[1])];
+const rop={'+':(a,b)=>a+b,'-':(a,b)=>a-b,'*':(a,b)=>a*b,
+  '/':(a,b)=>{ if(b===0){ if(a===0) throw new E(ERR.ures); throw new E(ERR.inf);} return a/b; },
+  '^':(a,b)=>{ if(a<0&&!Number.isInteger(b)) return cres(cm['^']([a,0],[b,0])); if(a===0&&b<0) throw new E(ERR.inf); return Math.pow(a,b); }};
+function arith(o,a,b){
+  const ta=T(a), tb=T(b);
+  if(ta==='r'&&tb==='r'){ const r=rop[o](a,b); return isR(r)?R(r):r; }
+  if((ta==='r'||ta==='c')&&(tb==='r'||tb==='c')) return cres(cm[o](toC(a),toC(b)));
+  if((sym(a)&&(tb==='r'||sym(b)))||(sym(b)&&ta==='r')) return alg({k:'op',o,a:toAst(a),b:toAst(b)});
+  if(o==='+'){
+    if(ta==='l') return lst(tb==='l'?a.v.concat(b.v):a.v.concat([b]));
+    if(tb==='l') return lst([a].concat(b.v));
+    if(ta==='s') return str(a.v+(tb==='s'?b.v:dec(b)));
+    if(tb==='s') return str(dec(a)+b.v);
+  }
+  if(ta==='v'&&tb==='v'&&(o==='+'||o==='-')){ if(a.v.length!==b.v.length) throw new E(ERR.dim); return vec(a.v.map((x,i)=>R(rop[o](x,b.v[i])))); }
+  if(ta==='v'&&tb==='r'&&(o==='*'||o==='/')) return vec(a.v.map(x=>R(rop[o](x,b))));
+  if(ta==='r'&&tb==='v'&&o==='*') return vec(b.v.map(x=>R(x*a)));
+  throw new E(ERR.type);
+}
+['+','-','*','/','^'].forEach(o=>C(o+({'*':' ×','/':' ÷'}[o]||''),2,(a,b)=>arith(o,a,b)));
+function U(names,fr,fc,sb){
+  const first=names.split(' ')[0]; ALGOK.add(first);
+  C(names,1,x=>{
+    if(isR(x)){ const r=fr(x); return isR(r)?R(r):r; }
+    if(x.t==='c'&&fc) return cres(fc(toC(x)));
+    if(sym(x)) return alg(sb?sb(toAst(x)):{k:'fn',f:first,args:[toAst(x)]});
+    throw new E(ERR.type);
+  });
+}
+const zap=(r,x)=>Math.abs(r)<1e-13&&Math.abs(x)>1e-6?0:r;
+ALGOK.add('NEG').add('ABS').add('π').add('e').add('i');
+C('NEG',1,x=>{ if(isR(x)) return -x||0; if(x.t==='c') return cx(-x.re||0,-x.im||0); if(x.t==='v') return vec(x.v.map(y=>-y||0));
+  if(sym(x)){ const a=toAst(x); return alg(a.k==='neg'?a.a:{k:'neg',a}); } throw new E(ERR.type); });
+U('INV',x=>{ if(x===0) throw new E(ERR.inf); return 1/x; },z=>cm['/']([1,0],z),a=>({k:'op',o:'/',a:{k:'num',v:1},b:a}));
+U('SQ',x=>x*x,z=>cm['*'](z,z),a=>({k:'op',o:'^',a,b:{k:'num',v:2}}));
+U('√ SQRT',x=>x<0?cres([0,Math.sqrt(-x)]):Math.sqrt(x),csqrt);
+C('ABS',1,x=>{ if(isR(x)) return Math.abs(x); if(x.t==='c') return R(Math.hypot(x.re,x.im)); if(x.t==='v') return R(Math.hypot(...x.v));
+  if(sym(x)) return alg({k:'fn',f:'ABS',args:[toAst(x)]}); throw new E(ERR.type); });
+U('SIN',x=>zap(Math.sin(toRad(x)),x),csin);
+U('COS',x=>zap(Math.cos(toRad(x)),x),ccos);
+U('TAN',x=>{ if(mode.ang==='DEG'&&Math.abs(x%180)===90) throw new E(ERR.inf); return zap(Math.tan(toRad(x)),x); },z=>cm['/'](csin(z),ccos(z)));
+U('ASIN',x=>{ if(Math.abs(x)>1) throw new E(ERR.val); return fromRad(Math.asin(x)); });
+U('ACOS',x=>{ if(Math.abs(x)>1) throw new E(ERR.val); return fromRad(Math.acos(x)); });
+U('ATAN',x=>fromRad(Math.atan(x)));
+U('LN',x=>{ if(x===0) throw new E(ERR.inf); return x<0?cres(cln([x,0])):Math.log(x); },z=>{ if(!z[0]&&!z[1]) throw new E(ERR.inf); return cln(z); });
+U('LOG',x=>{ if(x===0) throw new E(ERR.inf); return x<0?cres(cln([x,0]).map(v=>v/Math.LN10)):Math.log10(x); });
+U('EXP',x=>Math.exp(x),cexp);
+U('ALOG',x=>Math.pow(10,x));
+U('SINH',Math.sinh); U('COSH',Math.cosh); U('TANH',Math.tanh);
+U('ASINH',Math.asinh); U('ACOSH',x=>{ if(x<1) throw new E(ERR.val); return Math.acosh(x); }); U('ATANH',x=>{ if(Math.abs(x)>=1) throw new E(ERR.val); return Math.atanh(x); });
+U('EXPM',Math.expm1); U('LNP1',x=>{ if(x<=-1) throw new E(ERR.val); return Math.log1p(x); });
+U('IP',Math.trunc); U('FP',x=>x-Math.trunc(x)); U('FLOOR',Math.floor); U('CEIL',Math.ceil);
+U('SIGN',Math.sign,z=>{ const r=Math.hypot(z[0],z[1]); return r?[z[0]/r,z[1]/r]:[0,0]; });
+U('D→R D->R',x=>x*Math.PI/180); U('R→D R->D',x=>x*180/Math.PI);
+function gamma(z){ if(z<0.5) return Math.PI/(Math.sin(Math.PI*z)*gamma(1-z));
+  z-=1; const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  let x=c[0]; for(let i=1;i<g+2;i++) x+=c[i]/(z+i); const t=z+g+0.5; return Math.sqrt(2*Math.PI)*Math.pow(t,z+0.5)*Math.exp(-t)*x; }
+U('! FACT',x=>{ if(Number.isInteger(x)){ if(x<0) throw new E(ERR.ures); let r=1; for(let i=2;i<=x;i++){ r*=i; if(!isFinite(r)) throw new E(ERR.inf);} return r; } return gamma(x+1); });
+function N2(names,f){ ALGOK.add(names.split(' ')[0]); C(names,2,(a,b)=>R(f(real(a),real(b)))); }
+N2('MOD',(a,b)=>b===0?a:a-b*Math.floor(a/b));
+N2('%',(a,b)=>a*b/100); N2('%CH',(a,b)=>{ if(a===0) throw new E(ERR.inf); return 100*(b-a)/a; }); N2('%T',(a,b)=>{ if(a===0) throw new E(ERR.inf); return 100*b/a; });
+N2('MAX',Math.max); N2('MIN',Math.min);
+N2('COMB',(n,k)=>{ if(!Number.isInteger(n)||!Number.isInteger(k)||k<0||n<0) throw new E(ERR.val); if(k>n) return 0; let r=1; for(let i=1;i<=k;i++) r=r*(n-k+i)/i; return Math.round(r); });
+N2('PERM',(n,k)=>{ if(!Number.isInteger(n)||!Number.isInteger(k)||k<0||n<0) throw new E(ERR.val); if(k>n) return 0; let r=1; for(let i=0;i<k;i++) r*=n-i; return r; });
+N2('RND',(x,n)=>{ n=Math.round(n); if(n>=0) return Number(x.toFixed(Math.min(n,11))); return x===0?0:Number(x.toPrecision(Math.max(1,Math.min(12,-n)))); });
+N2('TRNC',(x,n)=>{ n=Math.max(0,Math.round(n)); const f=Math.pow(10,n); return Math.trunc(x*f)/f; });
+N2('XROOT',(y,x)=>{ if(x===0) throw new E(ERR.ures); if(y<0){ if(Number.isInteger(x)&&Math.abs(x)%2===1) return -Math.pow(-y,1/x); throw new E(ERR.val);} return Math.pow(y,1/x); });
+C('RAND',0,()=>R(Math.random()));
+C('π PI',0,()=>R(Math.PI)); C('e',0,()=>R(Math.E)); C('i',0,()=>cx(0,1));
+// complex
+C('R→C R->C',2,(a,b)=>cx(real(a),real(b)));
+C('C→R C->R',1,z=>{ if(T(z)!=='c') throw new E(ERR.type); return [z.re,z.im]; });
+C('RE',1,z=>isR(z)?z:T(z)==='c'?z.re:(()=>{throw new E(ERR.type)})());
+C('IM',1,z=>isR(z)?0:T(z)==='c'?z.im:(()=>{throw new E(ERR.type)})());
+C('ARG',1,z=>{ const c=isR(z)?[z,0]:T(z)==='c'?[z.re,z.im]:null; if(!c) throw new E(ERR.type); return R(fromRad(Math.atan2(c[1],c[0]))); });
+C('CONJ',1,z=>isR(z)?z:T(z)==='c'?cx(z.re,-z.im||0):(()=>{throw new E(ERR.type)})());
+// vectors
+C('DOT',2,(a,b)=>{ if(T(a)!=='v'||T(b)!=='v') throw new E(ERR.type); if(a.v.length!==b.v.length) throw new E(ERR.dim); return R(a.v.reduce((s,x,i)=>s+x*b.v[i],0)); });
+C('CROSS',2,(a,b)=>{ if(T(a)!=='v'||T(b)!=='v') throw new E(ERR.type); if(a.v.length!==3||b.v.length!==3) throw new E(ERR.dim);
+  const [x1,y1,z1]=a.v,[x2,y2,z2]=b.v; return vec([R(y1*z2-z1*y2),R(z1*x2-x1*z2),R(x1*y2-y1*x2)]); });
+// stack
+C('DUP',1,a=>[a,a]); C('SWAP',2,(a,b)=>[b,a]); C('DROP',1,()=>undefined); C('OVER',2,(a,b)=>[a,b,a]);
+C('ROT',3,(a,b,c)=>[b,c,a]); C('UNROT',3,(a,b,c)=>[c,a,b]); C('DUP2',2,(a,b)=>[a,b,a,b]); C('DROP2',2,()=>undefined);
+C('DEPTH',-1,()=>S.push(S.length)); C('CLEAR',-1,()=>{S.length=0;});
+function peekN(){ need(1); const x=S[S.length-1]; if(!isR(x)) throw new E(ERR.type); const n=Math.round(x); if(n<0) throw new E(ERR.val); if(S.length-1<n) throw new E(ERR.few); return n; }
+C('PICK',-1,()=>{ const n=peekN(); if(n<1) throw new E(ERR.val); S.pop(); S.push(S[S.length-n]); });
+C('ROLL',-1,()=>{ const n=peekN(); S.pop(); if(n>1){ const x=S.splice(S.length-n,1)[0]; S.push(x);} });
+C('ROLLD',-1,()=>{ const n=peekN(); S.pop(); if(n>1){ const x=S.pop(); S.splice(S.length-n+1,0,x);} });
+C('DUPN',-1,()=>{ const n=peekN(); S.pop(); S.push(...S.slice(S.length-n)); });
+C('DROPN',-1,()=>{ const n=peekN(); S.pop(); S.length-=n; });
+// objects
+C('→LIST ->LIST',-1,()=>{ const n=peekN(); S.pop(); const it=S.splice(S.length-n,n); S.push(lst(it)); });
+C('LIST→ LIST->',-1,()=>{ need(1); const x=S[S.length-1]; if(T(x)!=='l') throw new E(ERR.type); S.pop(); S.push(...x.v,x.v.length); });
+C('OBJ→ OBJ->',-1,()=>{ need(1); const x=S[S.length-1]; const t=T(x);
+  if(t==='l'||t==='p'){ S.pop(); S.push(...x.v,x.v.length); return; }
+  if(t==='v'){ S.pop(); S.push(...x.v,lst([x.v.length])); return; }
+  if(t==='c'){ S.pop(); S.push(x.re,x.im); return; }
+  if(t==='s'){ const items=parse(x.v); S.pop(); run(items); return; }
+  if(t==='a'){ const e=x.e; S.pop(); if(e.k==='op'){ S.push(astObj(e.a),astObj(e.b),2,nm(e.o)); } else if(e.k==='fn'){ e.args.forEach(a=>S.push(astObj(a))); S.push(e.args.length,nm(e.f)); } else if(e.k==='neg'){ S.push(astObj(e.a),1,nm('NEG')); } else S.push(astObj(e)); return; }
+  throw new E(ERR.type); });
+function astObj(e){ if(e.k==='num') return e.v; if(e.k==='var') return nm(e.n); return alg(e); }
+C('→STR ->STR',1,x=>str(T(x)==='s'?x.v:dec(x)));
+C('STR→ STR->',-1,()=>{ need(1); const x=S[S.length-1]; if(T(x)!=='s') throw new E(ERR.type); const items=parse(x.v); S.pop(); run(items); });
+const seqOf=x=>{ const t=T(x); if(t==='l'||t==='v') return x.v; if(t==='s') return [...x.v]; throw new E(ERR.type); };
+C('SIZE',1,x=>{ const t=T(x); if(t==='l'||t==='v') return x.v.length; if(t==='s') return [...x.v].length; if(t==='p') return x.v.length; if(t==='n'||t==='a') return 1; throw new E(ERR.type); });
+function idx(x,n){ const i=int(n); const a=seqOf(x); if(i<1||i>a.length) throw new E(ERR.val); return i-1; }
+C('GET',2,(x,n)=>{ if(T(x)==='s') throw new E(ERR.type); return x.v[idx(x,n)]; });
+C('PUT',3,(x,n,o)=>{ const i=idx(x,n); if(T(x)==='v'){ real(o); const v=x.v.slice(); v[i]=o; return vec(v);} if(T(x)!=='l') throw new E(ERR.type); const v=x.v.slice(); v[i]=o; return lst(v); });
+C('SUB',3,(x,a,b)=>{ const t=T(x); const s=Math.max(1,int(a)), e=int(b); if(t==='s') return str([...x.v].slice(s-1,Math.max(s-1,e)).join('')); if(t==='l') return lst(x.v.slice(s-1,Math.max(s-1,e))); throw new E(ERR.type); });
+C('HEAD',1,x=>{ const t=T(x); if(t==='s'){ if(!x.v) throw new E(ERR.val); return str([...x.v][0]); } if(t==='l'){ if(!x.v.length) throw new E(ERR.val); return x.v[0]; } throw new E(ERR.type); });
+C('TAIL',1,x=>{ const t=T(x); if(t==='s'){ if(!x.v) throw new E(ERR.val); return str([...x.v].slice(1).join('')); } if(t==='l'){ if(!x.v.length) throw new E(ERR.val); return lst(x.v.slice(1)); } throw new E(ERR.type); });
+C('POS',2,(x,o)=>{ if(T(x)==='s'){ if(T(o)!=='s') throw new E(ERR.type); return x.v.indexOf(o.v)+1; } if(T(x)==='l'){ const k=dec(o,'exact'); return x.v.findIndex(y=>dec(y,'exact')===k)+1; } throw new E(ERR.type); });
+C('NUM',1,x=>{ if(T(x)!=='s') throw new E(ERR.type); return x.v.length?x.v.codePointAt(0):0; });
+C('CHR',1,x=>{ const n=int(x); if(n<0||n>0x10FFFF) throw new E(ERR.val); return str(String.fromCodePoint(n)); });
+C('TYPE',1,x=>({r:0,c:1,s:2,v:3,l:5,n:6,p:8,a:9}[T(x)]??0));
+// tests
+const same=(a,b)=>dec(a,'exact')===dec(b,'exact');
+C('SAME',2,(a,b)=>same(a,b)?1:0);
+function cmp(o,a,b){ const ta=T(a),tb=T(b);
+  if(ta==='r'&&tb==='r') return {'<':a<b,'>':a>b,'≤':a<=b,'≥':a>=b}[o]?1:0;
+  if(ta==='s'&&tb==='s') return {'<':a.v<b.v,'>':a.v>b.v,'≤':a.v<=b.v,'≥':a.v>=b.v}[o]?1:0;
+  throw new E(ERR.type); }
+C('<',2,(a,b)=>cmp('<',a,b)); C('>',2,(a,b)=>cmp('>',a,b)); C('≤ <=',2,(a,b)=>cmp('≤',a,b)); C('≥ >=',2,(a,b)=>cmp('≥',a,b));
+C('==',2,(a,b)=>{ if((isR(a)||T(a)==='c')&&(isR(b)||T(b)==='c')){ const x=toC(a),y=toC(b); return x[0]===y[0]&&x[1]===y[1]?1:0; } return same(a,b)?1:0; });
+C('≠ != <>',2,(a,b)=>{ if((isR(a)||T(a)==='c')&&(isR(b)||T(b)==='c')){ const x=toC(a),y=toC(b); return x[0]===y[0]&&x[1]===y[1]?0:1; } return same(a,b)?0:1; });
+C('AND',2,(a,b)=>(real(a)&&real(b))?1:0); C('OR',2,(a,b)=>(real(a)||real(b))?1:0);
+C('XOR',2,(a,b)=>(!real(a))!==(!real(b))?1:0); C('NOT',1,a=>real(a)?0:1);
+// memory
+const nameOf=x=>{ if(T(x)!=='n') throw new E(ERR.type); return x.v; };
+C('STO',2,(v,n)=>{ const k=nameOf(n); if(lookupCmd(k)&&!findLocal(k)) throw new E(ERR.val); const f=findLocal(k); if(f) f[k]=v; else V[k]=v; });
+C('RCL',1,n=>{ const k=nameOf(n); const f=findLocal(k); if(f) return f[k]; if(!Object.prototype.hasOwnProperty.call(V,k)) throw new E(ERR.undef); return V[k]; });
+C('PURGE',1,n=>{ const ks=T(n)==='l'?n.v.map(nameOf):[nameOf(n)]; ks.forEach(k=>delete V[k]); });
+function incr(n,d){ const k=nameOf(n); const f=findLocal(k); const cur=f?f[k]:V[k]; if(cur===undefined) throw new E(ERR.undef); if(!isR(cur)) throw new E(ERR.type); const r=R(cur+d); if(f) f[k]=r; else V[k]=r; return r; }
+C('INCR',1,n=>incr(n,1)); C('DECR',1,n=>incr(n,-1));
+C('VARS',0,()=>lst(Object.keys(V).reverse().map(nm)));
+C('CLVAR',0,()=>{ V={}; });
+C('ERRM',0,()=>str(lastErr));
+C('EVAL',-1,()=>{ need(1); const x=S[S.length-1];
+  if(isR(x)) return;
+  switch(x.t){
+    case 'p': S.pop(); runGlobal(x.v); return;
+    case 'l': S.pop(); run(x.v); return;
+    case 'n': S.pop(); { const f=findLocal(x.v); if(f){ push(f[x.v]); return; } } evalName(x.v); return;
+    case 'a': { const r=evalAst(x.e,false); S.pop(); S.push(r); return; }
+  }});
+C('→NUM ->NUM',-1,()=>{ need(1); const x=S[S.length-1];
+  if(isR(x)) return;
+  if(x.t==='a'||x.t==='n'){ const r=x.t==='a'?evalAst(x.e,true):resolveVar(x.v,true); if(sym(r)) throw new E(ERR.undef); S.pop(); S.push(r); return; }
+  if(x.t==='p'){ S.pop(); runGlobal(x.v); return; } });
+// modes
+C('DEG',0,()=>{mode.ang='DEG';}); C('RAD',0,()=>{mode.ang='RAD';}); C('GRAD',0,()=>{mode.ang='GRAD';});
+C('STD',0,()=>{mode.fmt='STD';});
+['FIX','SCI','ENG'].forEach(f=>C(f,1,n=>{ const d=int(n); if(d<0||d>11) throw new E(ERR.val); mode.fmt=f; mode.dig=d; }));
+
+// ======================= Persistence =======================
+const KEY='rpl48-state-v1';
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify({s:S.map(x=>dec(x,'exact')),v:Object.entries(V).map(([k,x])=>[k,dec(x,'exact')]),m:mode})); }catch(e){} }
+function load(){
+  let d=null; try{ d=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  if(d){ try{ mode=Object.assign(mode,d.m||{}); S=(d.s||[]).map(s=>parse(s)[0]).filter(x=>x!==undefined); V={}; (d.v||[]).forEach(([k,s])=>{ const o=parse(s)[0]; if(o!==undefined) V[k]=o; }); return; }catch(e){ S=[]; V={}; } }
+  const demo=[['KREIS',"« → r 'π*r^2' »"],['FIB',"« → n « 0 1 1 n START SWAP OVER + NEXT DROP » »"],['FAKT',"« → n « 1 1 n FOR i i * NEXT » »"],['HYP',"« SQ SWAP SQ + √ »"]];
+  demo.forEach(([k,s])=>V[k]=parse(s)[0]);
+}
+
+// ======================= UI state =======================
+let cl=null, cur=0, shift=0, alpha=false, errState=null, istk=0, editOrig=null, undoS=null, touched=false;
+let menu={id:'VAR',page:0};
+const W=22, ROWS=5;
+const KWTYPE=new Set(['IF','THEN','ELSE','END','CASE','IFERR','FOR','START','NEXT','STEP','WHILE','REPEAT','DO','UNTIL','→']);
+const MENUS={
+  MTH:['>VECTR','>REAL','>PROB','>HYP','>CMPL','>CONST'],
+  VECTR:['ABS','DOT','CROSS','SIZE','GET','PUT'],
+  REAL:['%','%CH','%T','MIN','MAX','MOD','ABS','SIGN','IP','FP','FLOOR','CEIL','RND','TRNC','XROOT','D→R','R→D'],
+  PROB:['COMB','PERM','!','RAND'],
+  HYP:['SINH','ASINH','COSH','ACOSH','TANH','ATANH','EXPM','LNP1'],
+  CMPL:['R→C','C→R','RE','IM','ABS','ARG','CONJ','NEG','SIGN','i'],
+  CONST:['π','e','i'],
+  PRG:['>STACK','>OBJ','>BRCH','>TEST','>LIST','>STR','>MEM'],
+  STACK:['DUP','OVER','DUP2','DUPN','SWAP','ROT','UNROT','ROLL','ROLLD','PICK','DEPTH','DROP','DROP2','DROPN','CLEAR'],
+  OBJ:['OBJ→','→LIST','LIST→','→STR','STR→','TYPE','SAME','R→C','C→R','EVAL'],
+  BRCH:['«»','IF','THEN','ELSE','END','→','CASE','IFERR','FOR','START','NEXT','STEP','WHILE','REPEAT','DO','UNTIL'],
+  TEST:['==','≠','<','>','≤','≥','AND','OR','XOR','NOT','SAME','TYPE'],
+  LIST:['{}','→LIST','LIST→','SIZE','GET','PUT','SUB','HEAD','TAIL','POS'],
+  STR:['""','→STR','STR→','SIZE','SUB','POS','HEAD','TAIL','NUM','CHR'],
+  MEM:['VARS','STO','RCL','PURGE','INCR','DECR','ERRM','CLVAR'],
+  MODES:['STD','FIX','SCI','ENG','DEG','RAD','GRAD'],
+  ISTK:['ECHO','PICK','ROLL','ROLLD','→LIST','DRPN']
+};
+function menuItems(){
+  if(istk) return MENUS.ISTK.map(c=>({k:'istk',c,label:c}));
+  if(menu.id==='VAR') return Object.keys(V).reverse().map(n=>({k:'var',n,label:n}));
+  if(menu.id==='CST'){ const c=V.CST; if(!c||T(c)!=='l') return [];
+    return c.v.map(o=>{ if(T(o)==='n'||T(o)==='id'){ const n=o.v; return lookupCmd(n)?{k:'cmd',c:lookupCmd(n).name,label:n}:{k:'var',n,label:n}; } return {k:'obj',o,label:dec(o)}; }); }
+  return (MENUS[menu.id]||[]).map(s=>s[0]==='>'?{k:'dir',id:s.slice(1),label:s.slice(1)}:{k:'cmd',c:s,label:s});
+}
+function setMenu(id){ menu={id,page:0}; }
+
+// ---- command line helpers ----
+function clCtx(){
+  if(cl===null) return '';
+  const st=[]; let inStr=false;
+  for(let i=0;i<cur;i++){ const c=cl[i];
+    if(inStr){ if(c==='"') inStr=false; continue; }
+    if(c==='"'){ inStr=true; continue; }
+    if(st[st.length-1]==="'"){ if(c==="'") st.pop(); continue; }
+    if(c==="'") st.push("'");
+    else if(c==='«'||(c==='<'&&cl[i+1]==='<')){ st.push('«'); if(c==='<') i++; }
+    else if(c==='»'||(c==='>'&&cl[i+1]==='>')){ st.pop(); if(c==='>') i++; }
+    else if(c==='{'||c==='[') st.push(c);
+    else if(c==='}'||c===']') st.pop();
+  }
+  if(inStr) return 'str';
+  const t=st[st.length-1]; return t==="'"?'alg':t?'prg':'';
+}
+function ins(s,back){ if(cl===null){ cl=''; cur=0; } cl=cl.slice(0,cur)+s+cl.slice(cur); cur+=s.length-(back||0); }
+function insWord(w){ const pre=(cl!==null&&cur>0&&cl[cur-1]!==' ')?' ':''; const post=(cl!==null&&cl[cur]===' ')?'':' '; ins(pre+w+post, post?0:0); if(post==='') cur++; }
+const ALGTXT={'+':'+','-':'-','*':'*','/':'/','^':'^','×':'*','÷':'/','√':'√','==':'==','<':'<','>':'>','≤':'≤','≥':'≥','≠':'≠','π':'π','e':'e','i':'i'};
+function runTop(fn){
+  touched=true;
+  try{ steps=0; L=[]; fn(); return true; }
+  catch(e){ L=[]; showErr(e); return false; }
+}
+function showErr(e){
+  if(e instanceof E) errState={cmd:e.cmd,msg:e.message};
+  else if(e instanceof RangeError) errState={cmd:null,msg:ERR.mem};
+  else errState={cmd:null,msg:String(e&&e.message||e)};
+  lastErr=errState.msg;
+  try{ navigator.vibrate&&navigator.vibrate([30,40,30]); }catch(_){}
+}
+function enterLine(){
+  if(cl===null) return true;
+  let items; try{ items=parse(cl); }catch(e){ showErr(e); return false; }
+  cl=null; cur=0; alpha=false; editOrig=null;
+  return runTop(()=>run(items));
+}
+function cmdKey(name){
+  const ctx=clCtx();
+  if(ctx==='str'){ ins(name); return; }
+  if(ctx==='alg'){ const t=ALGTXT[name]; if(t!==undefined){ ins(t); return; } const c=lookupCmd(name); if(c&&ALGOK.has(c.name)){ ins(c.name+'('); return; } }
+  if(ctx==='prg'||KWTYPE.has(name)){ insWord(name); return; }
+  if(!enterLine()) return;
+  runTop(()=>execCmd(lookupCmd(name)));
+}
+function opChar(ch){ // physical keyboard operator
+  const ctx=clCtx();
+  if(ctx||(cl!==null&&/E$/i.test(cl.slice(0,cur))&&/[+-]/.test(ch))) { ins(ch); return; }
+  cmdKey(ch);
+}
+function attn(){
+  if(errState){ errState=null; }
+  if(istk){ istk=0; return; }
+  if(cl!==null){ cl=null; cur=0; if(editOrig!==null){ S.push(editOrig); editOrig=null; } }
+  alpha=false;
+}
+function doEdit(){ if(cl!==null||!S.length) return; editOrig=S.pop(); cl=dec(editOrig,'edit'); cur=cl.length; }
+function delims(open,close,alphaOn){ ins(open+close,close.length); if(alphaOn) alpha=true; }
+function toggleSign(){
+  if(cl===null){ runTop(()=>execCmd(CMD.NEG)); return; }
+  let j=cur; while(j>0&&/[0-9.]/.test(cl[j-1])) j--;
+  if(cl[j-1]==='-'){ cl=cl.slice(0,j-1)+cl.slice(j); cur--; }
+  else if(cl[j-1]==='+'){ cl=cl.slice(0,j-1)+'-'+cl.slice(j); }
+  else { cl=cl.slice(0,j)+'-'+cl.slice(j); cur++; }
+}
+function backspace(){
+  if(cl!==null){ if(cur>0){ cl=cl.slice(0,cur-1)+cl.slice(cur); cur--; } if(cl===''){ cl=null; cur=0; if(editOrig!==null){S.push(editOrig);editOrig=null;} } return; }
+  runTop(()=>execCmd(CMD.DROP));
+}
+function enterKey(){
+  if(istk){ istkAct('PICK'); return; }
+  if(cl!==null){ enterLine(); return; }
+  runTop(()=>execCmd(CMD.DUP));
+}
+function undo(){ if(undoS){ const t=S; S=undoS; undoS=t; save(); } }
+
+// ---- soft keys ----
+function softKey(i){
+  const items=menuItems(); const it=items[menu.page*6+i]; if(!it) return;
+  const sh=shift;
+  if(it.k==='dir'){ setMenu(it.id); return; }
+  if(it.k==='istk'){ istkAct(it.c); return; }
+  if(it.k==='obj'){ if(clCtx()) insWord(dec(it.o)); else { if(enterLine()) runTop(()=>push(it.o)); } return; }
+  if(it.k==='cmd'){
+    const c=it.c;
+    if(c==='«»'){ delims('« ',' »'); return; }
+    if(c==='{}'){ delims('{ ',' }'); return; }
+    if(c==='""'){ delims('"','"'); return; }
+    if(MENUS.MODES.includes(c)&&menu.id==='MODES'&&['FIX','SCI','ENG'].includes(c)&&cl===null&&(!S.length||!isR(S[S.length-1]))){ runTop(()=>{ S.push(mode.dig); execCmd(CMD[c]); }); return; }
+    cmdKey(c); return;
+  }
+  if(it.k==='var'){
+    const n=it.n, ctx=clCtx();
+    if(sh===1){ if(ctx==='prg'){ insWord("'"+n+"' STO"); return; } if(ctx==='alg'||ctx==='str'){ ins(n); return; }
+      if(enterLine()) runTop(()=>{ push(nm(n)); execCmd(CMD.STO); }); return; }
+    if(sh===2){ if(ctx==='prg'){ insWord("'"+n+"' RCL"); return; } if(ctx==='alg'||ctx==='str'){ ins(n); return; }
+      if(enterLine()) runTop(()=>{ push(nm(n)); execCmd(CMD.RCL); }); return; }
+    if(ctx==='alg'||ctx==='str'){ ins(n); return; }
+    if(ctx==='prg'){ insWord(n); return; }
+    if(enterLine()) runTop(()=>evalName(n));
+  }
+}
+function istkAct(a){
+  const p=istk; if(!p) return;
+  runTop(()=>{
+    if(p>S.length) throw new E(ERR.few);
+    switch(a){
+      case 'ECHO': { const s=dec(S[S.length-p],'edit'); istk=0; ins(s); return; }
+      case 'PICK': S.push(S[S.length-p]); break;
+      case 'ROLL': S.push(p); execCmd(CMD.ROLL); break;
+      case 'ROLLD': S.push(p); execCmd(CMD.ROLLD); break;
+      case '→LIST': S.push(p); execCmd(CMD['→LIST']); istk=1; break;
+      case 'DRPN': S.push(p); execCmd(CMD.DROPN); istk=0; break;
+    }
+  });
+  if(istk>S.length) istk=S.length;
+}
+
+// ======================= Keys =======================
+const K=(m,o)=>Object.assign({m},o||{});
+const KEYS6=[
+  K('',{soft:0,al:'A'}),K('',{soft:1,al:'B'}),K('',{soft:2,al:'C'}),K('',{soft:3,al:'D'}),K('',{soft:4,al:'E'}),K('',{soft:5,al:'F'}),
+  K('MTH',{al:'G',l:'MODES',r:'RAD',f:()=>setMenu('MTH'),fl:()=>setMenu('MODES'),fr:()=>{ mode.ang=mode.ang==='RAD'?'DEG':'RAD'; touched=true; }}),
+  K('PRG',{al:'H',l:'STACK',r:'BRCH',f:()=>setMenu('PRG'),fl:()=>setMenu('STACK'),fr:()=>setMenu('BRCH')}),
+  K('CST',{al:'I',l:'LIST',r:'STR',f:()=>setMenu('CST'),fl:()=>setMenu('LIST'),fr:()=>setMenu('STR')}),
+  K('VAR',{al:'J',l:'TEST',r:'MEM',f:()=>setMenu('VAR'),fl:()=>setMenu('TEST'),fr:()=>setMenu('MEM')}),
+  K('▲',{al:'K',f:()=>{ if(cl!==null){cur=0;return;} if(istk){ if(istk<S.length) istk++; } else if(S.length) istk=1; }}),
+  K('NXT',{al:'L',l:'PREV',f:()=>pageMenu(1),fl:()=>pageMenu(-1)}),
+  K("'",{al:'M',f:()=>{ if(clCtx()==='alg'){ ins("'"); return; } delims("'","'",true); }}),
+  K('STO',{al:'N',l:'PURGE',r:'RCL',f:()=>cmdKey('STO'),fl:()=>cmdKey('PURGE'),fr:()=>cmdKey('RCL')}),
+  K('EVAL',{al:'O',l:'→NUM',r:'UNDO',f:()=>cmdKey('EVAL'),fl:()=>cmdKey('→NUM'),fr:()=>{ if(cl===null) undo(); }}),
+  K('◄',{al:'P',f:()=>{ if(cl!==null){ if(cur>0) cur--; } }}),
+  K('▼',{al:'Q',f:()=>{ if(istk){ istk--; return; } if(cl!==null){ cur=cl.length; return; } doEdit(); }}),
+  K('►',{al:'R',f:()=>{ if(cl!==null){ if(cur<cl.length) cur++; return; } runTop(()=>execCmd(CMD.SWAP)); }}),
+  K('SIN',{al:'S',l:'ASIN',r:'SINH',f:()=>cmdKey('SIN'),fl:()=>cmdKey('ASIN'),fr:()=>cmdKey('SINH')}),
+  K('COS',{al:'T',l:'ACOS',r:'COSH',f:()=>cmdKey('COS'),fl:()=>cmdKey('ACOS'),fr:()=>cmdKey('COSH')}),
+  K('TAN',{al:'U',l:'ATAN',r:'TANH',f:()=>cmdKey('TAN'),fl:()=>cmdKey('ATAN'),fr:()=>cmdKey('TANH')}),
+  K('√x',{al:'V',l:'x²',r:'ˣ√y',f:()=>cmdKey('√'),fl:()=>cmdKey('SQ'),fr:()=>cmdKey('XROOT')}),
+  K('yˣ',{al:'W',l:'10ˣ',r:'LOG',f:()=>cmdKey('^'),fl:()=>cmdKey('ALOG'),fr:()=>cmdKey('LOG')}),
+  K('1/x',{al:'X',l:'eˣ',r:'LN',f:()=>cmdKey('INV'),fl:()=>cmdKey('EXP'),fr:()=>cmdKey('LN')}),
+  K('ENTER',{cls:'enter span2',l:'→LIST',r:'LIST→',f:enterKey,fl:()=>cmdKey('→LIST'),fr:()=>cmdKey('LIST→')}),
+  K('+/-',{al:'Y',l:'EDIT',f:toggleSign,fl:doEdit}),
+  K('EEX',{al:'Z',f:()=>ins(cl===null?'1E':'E')}),
+  K('DEL',{l:'CLEAR',f:()=>{ if(cl!==null&&cur<cl.length){ cl=cl.slice(0,cur)+cl.slice(cur+1); if(cl==='') {cl=null;cur=0;} } },fl:()=>{ if(cl!==null) attn(); else runTop(()=>execCmd(CMD.CLEAR)); }}),
+  K('⌫',{l:'DROP2',r:'DUP2',f:backspace,fl:()=>cmdKey('DROP2'),fr:()=>cmdKey('DUP2')}),
+];
+const KEYS5=[
+  K('α',{cls:'alpha',f:()=>{ alpha=!alpha; }}),
+  K('7',{l:'%',r:'%CH'}),K('8',{l:'!',r:'COMB'}),K('9',{l:'MOD',r:'ABS'}),
+  K('÷',{cls:'op',op:'/',l:'« »',fl:()=>delims('« ',' »')}),
+  K('◄',{cls:'ls',shift:1}),
+  K('4',{l:'IP',r:'FP'}),K('5',{l:'MAX',r:'MIN'}),K('6',{l:'SIGN',r:'RAND'}),
+  K('×',{cls:'op',op:'*',l:'[ ]',r:'" "',fl:()=>delims('[ ',' ]'),fr:()=>delims('"','"',true)}),
+  K('►',{cls:'rs',shift:2}),
+  K('1',{l:'DUP',r:'OVER'}),K('2',{l:'SWAP',r:'ROT'}),K('3',{l:'DEPTH',r:'PICK'}),
+  K('−',{cls:'op',op:'-',l:'( )',fl:()=>delims('(',')')}),
+  K('ON',{f:attn}),
+  K('0',{l:'→',fl:()=>insWord('→')}),
+  K('.',{l:',',fl:()=>ins(',')}),
+  K('SPC',{l:'π',r:'i',f:()=>ins(' '),fl:()=>cmdKey('π'),fr:()=>cmdKey('i')}),
+  K('+',{cls:'op',op:'+',l:'{ }',fl:()=>delims('{ ',' }')}),
+];
+KEYS5.forEach(k=>{ if(/^[0-9.]$/.test(k.m)){ const d=k.m; k.f=()=>ins(d); if(k.l&&!k.fl) k.fl=()=>cmdKey(k.l); if(k.r&&!k.fr) k.fr=()=>cmdKey(k.r); } if(k.op) k.f=()=>cmdKey(k.op); });
+function pageMenu(d){ const n=Math.max(1,Math.ceil(menuItems().length/6)); menu.page=(menu.page+d+n)%n; }
+
+function press(k){
+  const pre=S.slice(); touched=false;
+  if(k.shift){ shift=shift===k.shift?0:k.shift; render(); return; }
+  if(errState&&k.m!=='ON'){ errState=null; }
+  const sh=shift; shift=0;
+  try{
+    if(alpha&&(k.al||k.soft!==undefined)&&k.m!=='α'){
+      let ch=k.al; if(sh===1) ch=ch.toLowerCase(); ins(ch);
+    } else if(k.soft!==undefined){ shift=sh; softKey(k.soft); shift=0; }
+    else if(alpha&&k.op){ ins({'/':'/','*':'*','-':'-','+':'+'}[k.op]); }
+    else if(sh===1&&k.fl) k.fl();
+    else if(sh===2&&k.fr) k.fr();
+    else if(k.f) k.f();
+  }catch(e){ showErr(e); }
+  if(touched){ undoS=pre; save(); }
+  try{ navigator.vibrate&&navigator.vibrate(6); }catch(_){}
+  render();
+}
+
+// ======================= Render =======================
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+function fit(s,n){ return s.length>n?s.slice(0,n-1)+'…':s; }
+function render(){
+  const lines=[];
+  // header
+  if(errState){
+    lines.push('<div class="ln err">'+esc(fit((errState.cmd?errState.cmd+' ':'')+'Error:',W))+'</div>');
+    lines.push('<div class="ln err">'+esc(fit(errState.msg,W))+'</div>');
+  } else {
+    const f=mode.fmt==='STD'?'':mode.fmt+' '+mode.dig;
+    const a=mode.ang==='DEG'?'':mode.ang;
+    lines.push('<div class="ln hdr">'+esc(fit([a,f].filter(Boolean).join('  '),W))+'</div>');
+    lines.push('<div class="ln hdr">{ HOME }</div>');
+  }
+  // command line
+  let clLines=[];
+  if(cl!==null){
+    const text=cl+' ';
+    const chunks=[]; for(let i=0;i<text.length;i+=W) chunks.push(i);
+    const ci=Math.min(Math.floor(cur/W),chunks.length-1);
+    const start=Math.max(0,ci-2);
+    for(let c=start;c<=Math.max(ci,Math.min(chunks.length-1,start+2));c++){
+      const off=chunks[c]; const seg=text.slice(off,off+W);
+      let h=''; for(let j=0;j<seg.length;j++){ const ch=esc(seg[j]); h+=(off+j===cur)?'<span class="cur">'+ch+'</span>':ch; }
+      clLines.push('<div class="ln">'+h+'</div>');
+    }
+    if(clLines.length>3) clLines=clLines.slice(-3);
+  }
+  const nStack=ROWS-clLines.length;
+  let base=1; if(istk&&istk>nStack) base=istk-nStack+1;
+  const st=[];
+  for(let lv=base+nStack-1;lv>=base;lv--){
+    const lab=(istk===lv?'►':'')+lv+':';
+    let txt='';
+    if(lv<=S.length) txt=dec(S[S.length-lv]);
+    const avail=W-lab.length;
+    txt=fit(txt.replace(/\n/g,' '),avail);
+    st.push('<div class="ln'+(istk===lv?' ptr':'')+'">'+esc(lab+txt.padStart(avail))+'</div>');
+  }
+  document.getElementById('screen').innerHTML=lines.join('')+st.join('')+clLines.join('');
+  // menu
+  const items=menuItems(); const pages=Math.max(1,Math.ceil(items.length/6)); if(menu.page>=pages) menu.page=0;
+  let mh='';
+  for(let i=0;i<6;i++){
+    const it=items[menu.page*6+i];
+    if(!it){ mh+='<div class="mk'+(items.length?'':' empty')+'"></div>'; continue; }
+    let lab=it.label;
+    if(menu.id==='MODES'&&!istk){ if(lab===mode.fmt||lab===mode.ang) lab+='■'; }
+    if(menu.id==='MODES'&&lab==='RAD'&&mode.ang!=='RAD'){}
+    mh+='<div class="mk'+(it.k==='dir'?' dir':'')+'">'+esc(lab.length>6?lab.slice(0,5)+'…':lab)+'</div>';
+  }
+  document.getElementById('menu').innerHTML=mh;
+  // annunciators
+  const ctx=clCtx();
+  document.getElementById('aL').classList.toggle('on',shift===1);
+  document.getElementById('aR').classList.toggle('on',shift===2);
+  document.getElementById('aA').classList.toggle('on',alpha);
+  document.getElementById('aP').classList.toggle('on',ctx==='prg');
+  document.getElementById('aG').classList.toggle('on',ctx==='alg');
+  document.querySelectorAll('.key.ls').forEach(b=>b.classList.toggle('on1',shift===1));
+  document.querySelectorAll('.key.rs').forEach(b=>b.classList.toggle('on1',shift===2));
+  document.querySelectorAll('.key.alpha').forEach(b=>b.classList.toggle('on1',alpha));
+}
+function buildKeys(){
+  const mk=(k,host)=>{
+    const cell=document.createElement('div'); cell.className='cell'+(k.cls&&k.cls.includes('span2')?' span2':'');
+    const sh=document.createElement('div'); sh.className='sh';
+    sh.innerHTML='<span class="l">'+esc(k.l||'')+'</span><span class="r">'+esc(k.r||'')+'</span>';
+    const b=document.createElement('button'); b.className='key'+(k.soft!==undefined?' soft':'')+(k.cls?' '+k.cls.replace('span2',''):'');
+    b.innerHTML=esc(k.m)+(k.al?'<span class="al">'+k.al+'</span>':'');
+    b.addEventListener('pointerdown',e=>{ e.preventDefault(); b.classList.add('down'); press(k); });
+    const up=()=>b.classList.remove('down'); b.addEventListener('pointerup',up); b.addEventListener('pointerleave',up); b.addEventListener('pointercancel',up);
+    b.addEventListener('contextmenu',e=>e.preventDefault());
+    cell.appendChild(sh); cell.appendChild(b); host.appendChild(cell);
+  };
+  KEYS6.forEach(k=>mk(k,document.getElementById('g6')));
+  KEYS5.forEach(k=>mk(k,document.getElementById('g5')));
+}
+function sizeLcd(){
+  const lcd=document.getElementById('lcd'); lcd.style.paddingLeft=lcd.style.paddingRight='6px'; const w=lcd.clientWidth-12;
+  const probe=document.createElement('span'); probe.style.cssText='position:absolute;visibility:hidden;white-space:pre;font:inherit;font-size:100px';
+  probe.textContent='0'.repeat(W); lcd.appendChild(probe); const pw=probe.getBoundingClientRect().width; lcd.removeChild(probe);
+  const fw=100*w/pw, fh=window.innerHeight*0.29/9.6; const f=Math.floor(Math.min(fw,fh)*10)/10;
+  lcd.style.fontSize=f+'px'; const pad=Math.max(6,(lcd.clientWidth-pw*f/100)/2);
+  lcd.style.paddingLeft=lcd.style.paddingRight=pad+'px';
+}
+// physical / soft keyboard text input
+function typeChar(ch){
+  if(errState) errState=null;
+  const pre=S.slice(); touched=false;
+  if('+-*/^'.includes(ch)) opChar(ch); else ins(ch);
+  if(touched){ undoS=pre; save(); }
+  render();
+}
+function special(name){
+  const pre=S.slice(); touched=false; if(errState&&name!=='esc') errState=null;
+  if(name==='enter') enterKey(); else if(name==='bs') backspace(); else if(name==='esc') attn();
+  else if(name==='left'){ if(cl!==null&&cur>0) cur--; } else if(name==='right'){ if(cl!==null){ if(cur<cl.length) cur++; } else runTop(()=>execCmd(CMD.SWAP)); }
+  else if(name==='up'){ KEYS6[10].f(); } else if(name==='down'){ KEYS6[16].f(); }
+  else if(name==='del'){ KEYS6[27].f(); }
+  if(touched){ undoS=pre; save(); }
+  render();
+}
+const kbd=document.getElementById('kbd');
+document.getElementById('lcd').addEventListener('click',()=>{ try{ kbd.focus(); }catch(e){} });
+kbd.addEventListener('beforeinput',e=>{
+  e.preventDefault();
+  if(e.inputType==='insertText'||e.inputType==='insertReplacementText'){ for(const ch of (e.data||'')) typeChar(ch); }
+  else if(e.inputType==='deleteContentBackward') special('bs');
+  else if(e.inputType==='insertLineBreak') special('enter');
+});
+kbd.addEventListener('input',()=>{ kbd.value=''; });
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('help').classList.contains('show')){ if(e.key==='Escape') hideHelp(); return; }
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  const map={Enter:'enter',Backspace:'bs',Escape:'esc',ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',Delete:'del'};
+  if(map[e.key]){ e.preventDefault(); special(map[e.key]); return; }
+  if(e.target===kbd) return; // handled by beforeinput
+  if(e.key.length===1){ e.preventDefault(); typeChar(e.key); }
+});
+// help
+const help=document.getElementById('help');
+function hideHelp(){ help.classList.remove('show'); }
+document.getElementById('hbtn').addEventListener('click',()=>help.classList.add('show'));
+document.getElementById('hx').addEventListener('click',hideHelp);
+help.addEventListener('click',e=>{ if(e.target===help) hideHelp(); });
+
+load(); buildKeys(); sizeLcd(); render();
+window.addEventListener('resize',()=>{ sizeLcd(); render(); });
+if('serviceWorker' in navigator){ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }
+document.addEventListener('gesturestart',e=>e.preventDefault());
+window.RPL={parse,run,S:()=>S,dec,V:()=>V,exec:(s)=>{ runTop(()=>run(parse(s))); render(); return S.map(x=>dec(x)); }};
+</script>
+</body>
+</html>
